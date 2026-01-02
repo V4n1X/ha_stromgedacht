@@ -1,0 +1,14 @@
+{
+  "domain": "stromgedacht",
+  "name": "StromGedacht",
+  "version": "1.1.0",
+  "documentation": "https://github.com/V4n1X/ha_stromgedacht/blob/master/README.md",
+  "issue_tracker": "https://github.com/V4n1X/ha_stromgedacht/issues",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@V4n1X"
+  ],
+  "config_flow": true,
+  "iot_class": "cloud_polling"
+}

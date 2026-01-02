@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "StromGedacht Einrichtung",
+        "description": "Verbinde Home Assistant mit der StromGedacht API.\n\nBitte gib deine Postleitzahl ein.",
+        "data": {
+          "zip_code": "Postleitzahl (PLZ)",
+          "scan_interval": "Abrufintervall (in Minuten)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbindung zur API fehlgeschlagen. Bitte Internet und PLZ prüfen.",
+      "unknown": "Ein unbekannter Fehler ist aufgetreten."
+    },
+    "abort": {
+      "already_configured": "Diese PLZ ist bereits eingerichtet."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "StromGedacht Einstellungen",
+        "description": "Hier kannst du anpassen, wie oft die Daten aktualisiert werden.",
+        "data": {
+          "scan_interval": "Abrufintervall (Minuten)"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up StromGedacht",
+        "description": "Connect Home Assistant to the StromGedacht API.\n\nPlease enter your zip code.",
+        "data": {
+          "zip_code": "Zip Code",
+          "scan_interval": "Update Interval (minutes)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Connection failed. Please check zip code and internet.",
+      "unknown": "Unexpected error."
+    },
+    "abort": {
+      "already_configured": "This zip code is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "StromGedacht Options",
+        "description": "Configure how often data is fetched.",
+        "data": {
+          "scan_interval": "Update Interval (minutes)"
+        }
+      }
+    }
+  }
+}
