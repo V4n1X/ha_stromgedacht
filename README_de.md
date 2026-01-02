@@ -12,6 +12,13 @@ Diese Custom Integration bindet die [StromGedacht API](https://api.stromgedacht.
 * **Leistungsdaten:** Sensoren für **Netzlast**, **Erneuerbare Energie** und **Residuallast** (in MW).
 * **Anpassbar:** Das Aktualisierungsintervall kann in den Optionen geändert werden.
 
+## 🖼️ Vorschau
+
+<p align="left">
+  <img src="https://github.com/user-attachments/assets/f12b0c5e-2115-40ba-b548-47548c1bc120" alt="StromGedacht Dashboard Example" width="600">
+</p>
+
+
 ## 📥 Installation
 
 ### Option 1: HACS (Empfohlen)
