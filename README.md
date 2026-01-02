@@ -16,6 +16,12 @@ This custom integration integrates the [StromGedacht API](https://api.stromgedac
 * **Forecast Data:** Provides sensors for **Grid Load**, **Renewable Energy**, and **Residual Load** (in MW).
 * **Configurable Interval:** Adjust the update frequency via integration options.
 
+## 🖼️ Preview
+
+<p align="left">
+  <img src="https://github.com/user-attachments/assets/f12b0c5e-2115-40ba-b548-47548c1bc120" alt="StromGedacht Dashboard Example" width="600">
+</p>
+
 ## 📥 Installation
 
 ### Option 1: HACS (Recommended)
