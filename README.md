@@ -1,6 +1,6 @@
 # StromGedacht for Home Assistant
 
-[![HACS Custom](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
+[![HACS Custom](https://img.shields.io/badge/HACS-Custom-blue.svg)](https://github.com/hacs/integration)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/V4n1X/ha_stromgedacht)](https://github.com/V4n1X/ha_stromgedacht/releases)
 [![Maintainer](https://img.shields.io/badge/maintainer-V4n1X-blue)](https://github.com/V4n1X)
 
@@ -10,11 +10,10 @@ This custom integration integrates the [StromGedacht API](https://api.stromgedac
 
 ## ✨ Features
 
-* **Easy Configuration:** Setup via Home Assistant UI (Config Flow).
+* **Easy Configuration:** Setup via Home Assistant UI.
 * **Mandatory Zip Code:** Get localized data for your area.
 * **Real-time Data:** Fetches grid status (Green/Yellow/Red/SuperGreen).
 * **Forecast Data:** Provides sensors for **Grid Load**, **Renewable Energy**, and **Residual Load** (in MW).
-* **Service Grouping:** All entities are grouped under a "StromGedacht" service device.
 * **Configurable Interval:** Adjust the update frequency via integration options.
 
 ## 📥 Installation
