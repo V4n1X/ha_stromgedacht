@@ -1,7 +1,7 @@
 {
   "domain": "stromgedacht",
   "name": "StromGedacht",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "documentation": "https://github.com/V4n1X/ha_stromgedacht/blob/master/README.md",
   "issue_tracker": "https://github.com/V4n1X/ha_stromgedacht/issues",
   "requirements": [],
