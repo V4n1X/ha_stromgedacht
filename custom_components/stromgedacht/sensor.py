@@ -1,6 +1,7 @@
 """Sensor platform for StromGedacht."""
 from __future__ import annotations
 
+from dateutil.parser import parse
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorDeviceClass,
@@ -12,6 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import StromGedachtDataUpdateCoordinator
@@ -60,7 +62,7 @@ async def async_setup_entry(
 
 
 class StromGedachtStateSensor(CoordinatorEntity, SensorEntity):
-    """Sensor (Ampel)."""
+    """Der Haupt-Status Sensor (Ampel)."""
 
     def __init__(self, coordinator, entry) -> None:
         super().__init__(coordinator)
@@ -86,7 +88,7 @@ class StromGedachtStateSensor(CoordinatorEntity, SensorEntity):
         states = self.coordinator.data.get("states", [])
         if not states:
             return "Unbekannt"
-        
+
         current_state_code = states[0].get("state", 0)
         return STATE_MAPPING.get(current_state_code, f"Unbekannt ({current_state_code})")
 
@@ -133,7 +135,6 @@ class StromGedachtForecastSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self._entry = entry
         self._json_key = json_key
-        # Der Name wird durch has_entity_name automatisch mit dem Gerätenamen kombiniert
         self._attr_name = name_suffix
         self._attr_unique_id = f"{entry.entry_id}_{json_key}"
         self._attr_icon = icon
@@ -152,13 +153,30 @@ class StromGedachtForecastSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def native_value(self) -> float | None:
+        """Gibt den Wert für den aktuellen Zeitpunkt zurück."""
         forecast_data = self.coordinator.data.get("forecast", {}).get(self._json_key, [])
+        
         if not forecast_data:
             return None
-        try:
-            return float(forecast_data[0].get("value", 0))
-        except (IndexError, ValueError):
-            return None
+
+        now = dt_util.now()
+        current_value = None
+
+        for entry in forecast_data:
+            try:
+                entry_dt = parse(entry["dateTime"])
+                
+                if entry_dt.tzinfo is None:
+                    entry_dt = entry_dt.replace(tzinfo=dt_util.UTC)
+
+                if entry_dt <= now:
+                    current_value = float(entry["value"])
+                else:
+                    break
+            except (ValueError, TypeError):
+                continue
+        
+        return current_value
 
     @property
     def extra_state_attributes(self) -> dict:
