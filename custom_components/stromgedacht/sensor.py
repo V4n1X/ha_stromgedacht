@@ -1,6 +1,7 @@
 """Sensor platform for StromGedacht."""
 from __future__ import annotations
 
+from datetime import timedelta
 from dateutil.parser import parse
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -62,7 +63,7 @@ async def async_setup_entry(
 
 
 class StromGedachtStateSensor(CoordinatorEntity, SensorEntity):
-    """Der Haupt-Status Sensor (Ampel)."""
+    """Status Sensor (Ampel)."""
 
     def __init__(self, coordinator, entry) -> None:
         super().__init__(coordinator)
@@ -88,7 +89,7 @@ class StromGedachtStateSensor(CoordinatorEntity, SensorEntity):
         states = self.coordinator.data.get("states", [])
         if not states:
             return "Unbekannt"
-
+        
         current_state_code = states[0].get("state", 0)
         return STATE_MAPPING.get(current_state_code, f"Unbekannt ({current_state_code})")
 
@@ -124,7 +125,7 @@ class StromGedachtStateSensor(CoordinatorEntity, SensorEntity):
 
 
 class StromGedachtForecastSensor(CoordinatorEntity, SensorEntity):
-    """Sensor für numerische Werte (MW)."""
+    """Sensor (MW)."""
 
     _attr_device_class = SensorDeviceClass.POWER
     _attr_state_class = SensorStateClass.MEASUREMENT
@@ -153,7 +154,6 @@ class StromGedachtForecastSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def native_value(self) -> float | None:
-        """Gibt den Wert für den aktuellen Zeitpunkt zurück."""
         forecast_data = self.coordinator.data.get("forecast", {}).get(self._json_key, [])
         
         if not forecast_data:
@@ -165,7 +165,6 @@ class StromGedachtForecastSensor(CoordinatorEntity, SensorEntity):
         for entry in forecast_data:
             try:
                 entry_dt = parse(entry["dateTime"])
-                
                 if entry_dt.tzinfo is None:
                     entry_dt = entry_dt.replace(tzinfo=dt_util.UTC)
 
@@ -180,6 +179,35 @@ class StromGedachtForecastSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def extra_state_attributes(self) -> dict:
+        """Forecast-Data DB-Limit"""
+        raw_data = self.coordinator.data.get("forecast", {}).get(self._json_key, [])
+        
+        if not raw_data:
+            return {}
+
+        now = dt_util.now()
+        limited_data = []
+
+        start_limit = now - timedelta(hours=2)
+        
+        count = 0
+        MAX_ITEMS = 192
+
+        for entry in raw_data:
+            if count >= MAX_ITEMS:
+                break
+            
+            try:
+                entry_dt = parse(entry["dateTime"])
+                if entry_dt.tzinfo is None:
+                    entry_dt = entry_dt.replace(tzinfo=dt_util.UTC)
+
+                if entry_dt >= start_limit:
+                    limited_data.append(entry)
+                    count += 1
+            except (ValueError, TypeError):
+                continue
+
         return {
-            "data_series": self.coordinator.data.get("forecast", {}).get(self._json_key, [])
+            "data_series": limited_data
         }
