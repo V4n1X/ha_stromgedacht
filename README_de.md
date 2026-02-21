@@ -23,6 +23,8 @@ Diese Custom Integration bindet die [StromGedacht API](https://api.stromgedacht.
 
 ### Option 1: HACS (Empfohlen)
 
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=V4n1X&repository=ha_stromgedacht&category=Integration)
+
 1.  Öffne HACS in Home Assistant.
 2.  Gehe zu **Integrationen** > Menü oben rechts (3 Punkte) > **Benutzerdefinierte Repositorys**.
 3.  Füge die URL hinzu: `https://github.com/V4n1X/ha_stromgedacht`
