@@ -2,28 +2,31 @@
   "config": {
     "step": {
       "user": {
-        "title": "StromGedacht einrichten",
-        "description": "Bitte gib deine PLZ ein, um Daten von StromGedacht abzurufen.",
+        "title": "Set up StromGedacht",
+        "description": "Connect Home Assistant to the StromGedacht API.\n\nPlease enter your zip code.",
         "data": {
-          "zip_code": "Postleitzahl",
-          "scan_interval": "Aktualisierungsintervall (Minuten)"
+          "zip_code": "Zip Code",
+          "scan_interval": "Update Interval (minutes)",
+          "short_status": "Short status text (only color)"
         }
       }
     },
     "error": {
-      "cannot_connect": "Verbindung fehlgeschlagen. Prüfe die PLZ oder Internetverbindung.",
-      "unknown": "Unbekannter Fehler."
+      "cannot_connect": "Connection failed. Please check zip code and internet.",
+      "unknown": "Unexpected error."
     },
     "abort": {
-      "already_configured": "Diese PLZ ist bereits konfiguriert."
+      "already_configured": "This zip code is already configured."
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "StromGedacht Konfiguration",
+        "title": "StromGedacht Options",
+        "description": "Configure how often data is fetched.",
         "data": {
-          "scan_interval": "Aktualisierungsintervall (Minuten)"
+          "scan_interval": "Update Interval (minutes)",
+          "short_status": "Short status text (only color)"
         }
       }
     }

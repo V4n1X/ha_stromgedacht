@@ -6,7 +6,8 @@
         "description": "Verbinde Home Assistant mit der StromGedacht API.\n\nBitte gib deine Postleitzahl ein.",
         "data": {
           "zip_code": "Postleitzahl (PLZ)",
-          "scan_interval": "Abrufintervall (in Minuten)"
+          "scan_interval": "Abrufintervall (in Minuten)",
+          "short_status": "Kurzer Statustext (Nur Farbe)"
         }
       }
     },
@@ -24,7 +25,8 @@
         "title": "StromGedacht Einstellungen",
         "description": "Hier kannst du anpassen, wie oft die Daten aktualisiert werden.",
         "data": {
-          "scan_interval": "Abrufintervall (Minuten)"
+          "scan_interval": "Abrufintervall (Minuten)",
+          "short_status": "Kurzer Statustext (Nur Farbe)"
         }
       }
     }

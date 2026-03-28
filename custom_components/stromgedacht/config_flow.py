@@ -15,7 +15,9 @@ from .const import (
     DOMAIN, 
     CONF_ZIP_CODE, 
     CONF_SCAN_INTERVAL, 
+    CONF_SHORT_STATUS,
     DEFAULT_SCAN_INTERVAL, 
+    DEFAULT_SHORT_STATUS,
     MIN_SCAN_INTERVAL,
     URL_STATES
 )
@@ -41,7 +43,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle options flow for StromGedacht (Nachträgliche Änderung)."""
+    """Handle options flow for StromGedacht."""
 
     def __init__(self, config_entry) -> None:
         """Initialize options flow."""
@@ -61,12 +63,20 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             CONF_SCAN_INTERVAL, 
             current_data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         )
+        current_short_status = current_options.get(
+            CONF_SHORT_STATUS,
+            current_data.get(CONF_SHORT_STATUS, DEFAULT_SHORT_STATUS)
+        )
 
         schema = vol.Schema({
             vol.Optional(
                 CONF_SCAN_INTERVAL, 
                 default=current_interval
             ): vol.All(vol.Coerce(int), vol.Range(min=MIN_SCAN_INTERVAL)),
+            vol.Optional(
+                CONF_SHORT_STATUS,
+                default=current_short_status
+            ): bool,
         })
 
         return self.async_show_form(step_id="init", data_schema=schema)
@@ -108,6 +118,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_SCAN_INTERVAL, 
                 default=DEFAULT_SCAN_INTERVAL
             ): vol.All(vol.Coerce(int), vol.Range(min=MIN_SCAN_INTERVAL)),
+            vol.Optional(
+                CONF_SHORT_STATUS,
+                default=DEFAULT_SHORT_STATUS
+            ): bool,
         })
 
         return self.async_show_form(

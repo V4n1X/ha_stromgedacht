@@ -14,6 +14,7 @@ This custom integration integrates the [StromGedacht API](https://api.stromgedac
 * **Mandatory Zip Code:** Get localized data for your area.
 * **Real-time Data:** Fetches grid status (Green/Yellow/Red/SuperGreen).
 * **Forecast Data:** Provides sensors for **Grid Load**, **Renewable Energy**, and **Residual Load** (in MW).
+* **Short Status Mode:** Choose between a detailed status text or a short version (Red, Orange, Green, Supergreen).
 * **Configurable Interval:** Adjust the update frequency via integration options.
 
 ## 🖼️ Preview
