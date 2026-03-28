@@ -19,19 +19,11 @@ from homeassistant.util import dt as dt_util
 from .const import DOMAIN, CONF_SHORT_STATUS, DEFAULT_SHORT_STATUS
 from .coordinator import StromGedachtDataUpdateCoordinator
 
-# Status Mappings
-STATE_MAPPING = {
-    -1: "Super Green (Grid-serving)",
-    1: "Green (Normal Operation)",
-    3: "Orange (Reduce Consumption)",
-    4: "Red (Avoid Power Shortage)",
-}
-
-STATE_MAPPING_SHORT = {
-    -1: "Super Green",
-    1: "Green",
-    3: "Orange",
-    4: "Red",
+STATE_SLUG_MAPPING = {
+    -1: "super_green",
+    1: "green",
+    3: "orange",
+    4: "red",
 }
 
 ICON_MAPPING = {
@@ -52,34 +44,37 @@ async def async_setup_entry(
     entities = []
     
     entities.append(StromGedachtStateSensor(coordinator, entry))
-    
     if coordinator.data and "forecast" in coordinator.data:
         entities.append(StromGedachtForecastSensor(
-            coordinator, entry, "renewableEnergy", "Renewable Energy", "mdi:solar-power"
+            coordinator, entry, "renewableEnergy", "renewable_energy", "mdi:solar-power"
         ))
         entities.append(StromGedachtForecastSensor(
-            coordinator, entry, "load", "Grid Load", "mdi:transmission-tower"
+            coordinator, entry, "load", "grid_load", "mdi:transmission-tower"
         ))
         entities.append(StromGedachtForecastSensor(
-            coordinator, entry, "residualLoad", "Residual Load", "mdi:chart-line"
+            coordinator, entry, "residualLoad", "residual_load", "mdi:chart-line"
         ))
 
     async_add_entities(entities)
 
 
 class StromGedachtStateSensor(CoordinatorEntity, SensorEntity):
-    """Status Sensor (Ampel)."""
-
     def __init__(self, coordinator, entry) -> None:
         super().__init__(coordinator)
         self._entry = entry
-        self._attr_name = "Status"
         self._attr_unique_id = f"{entry.entry_id}_state"
         self._attr_has_entity_name = True
 
     @property
+    def translation_key(self) -> str:
+        short_status = self._entry.options.get(
+            CONF_SHORT_STATUS, 
+            self._entry.data.get(CONF_SHORT_STATUS, DEFAULT_SHORT_STATUS)
+        )
+        return "state_short" if short_status else "state"
+
+    @property
     def device_info(self) -> DeviceInfo:
-        """Information about the device (Service)."""
         return DeviceInfo(
             identifiers={(DOMAIN, self._entry.entry_id)},
             name=f"StromGedacht {self._entry.data['zip_code']}",
@@ -93,19 +88,10 @@ class StromGedachtStateSensor(CoordinatorEntity, SensorEntity):
     def native_value(self) -> str | None:
         states = self.coordinator.data.get("states", [])
         if not states:
-            return "Unknown"
+            return "unknown"
         
         current_state_code = states[0].get("state", 0)
-        
-        short_status = self._entry.options.get(
-            CONF_SHORT_STATUS, 
-            self._entry.data.get(CONF_SHORT_STATUS, DEFAULT_SHORT_STATUS)
-        )
-
-        if short_status:
-            return STATE_MAPPING_SHORT.get(current_state_code, f"Unknown ({current_state_code})")
-        
-        return STATE_MAPPING.get(current_state_code, f"Unknown ({current_state_code})")
+        return STATE_SLUG_MAPPING.get(current_state_code, "unknown")
 
     @property
     def icon(self) -> str:
@@ -139,24 +125,21 @@ class StromGedachtStateSensor(CoordinatorEntity, SensorEntity):
 
 
 class StromGedachtForecastSensor(CoordinatorEntity, SensorEntity):
-    """Sensor (MW)."""
-
     _attr_device_class = SensorDeviceClass.POWER
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = UnitOfPower.MEGA_WATT
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator, entry, json_key, name_suffix, icon):
+    def __init__(self, coordinator, entry, json_key, translation_key, icon):
         super().__init__(coordinator)
         self._entry = entry
         self._json_key = json_key
-        self._attr_name = name_suffix
+        self._attr_translation_key = translation_key
         self._attr_unique_id = f"{entry.entry_id}_{json_key}"
         self._attr_icon = icon
 
     @property
     def device_info(self) -> DeviceInfo:
-        """Link to the same device as the state sensor."""
         return DeviceInfo(
             identifiers={(DOMAIN, self._entry.entry_id)},
             name=f"StromGedacht {self._entry.data['zip_code']}",
@@ -193,7 +176,6 @@ class StromGedachtForecastSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def extra_state_attributes(self) -> dict:
-        """Forecast data DB limit."""
         raw_data = self.coordinator.data.get("forecast", {}).get(self._json_key, [])
         
         if not raw_data:
