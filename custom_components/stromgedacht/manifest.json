@@ -6,9 +6,9 @@
   ],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://github.com/V4n1X/ha_stromgedacht/blob/master/README.md",
+  "documentation": "https://github.com/V4n1X/ha_stromgedacht/blob/main/README.md",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/V4n1X/ha_stromgedacht/issues",
   "requirements": [],
-  "version": "1.2.0"
+  "version": "1.4.0"
 }

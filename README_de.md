@@ -10,6 +10,7 @@ Diese Custom Integration bindet die [StromGedacht API](https://api.stromgedacht.
 * **PLZ-basiert:** Lokalisierte Daten für deinen Standort.
 * **Echtzeit-Status:** Ampelsystem (Grün/Gelb/Rot/Supergrün).
 * **Leistungsdaten:** Sensoren für **Netzlast**, **Erneuerbare Energie** und **Residuallast** (in MW).
+* **Kurzer Statustext:** Wähle zwischen dem vollen Text oder einer kurzen Version (Rot, Orange, Grün, Supergrün).
 * **Anpassbar:** Das Aktualisierungsintervall kann in den Optionen geändert werden.
 
 ## 🖼️ Vorschau

@@ -27,11 +27,10 @@ class StromGedachtDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching StromGedacht data."""
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
-        """Initialize."""
         self.entry = entry
         self.zip_code = entry.data[CONF_ZIP_CODE]
         
-        # Intervall aus Optionen oder Config
+        # Interval from options or config
         scan_interval_min = entry.options.get(
             CONF_SCAN_INTERVAL, 
             entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
@@ -45,7 +44,6 @@ class StromGedachtDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
     async def _async_update_data(self):
-        """Fetch data from API (States and Forecast)."""
         session = async_get_clientsession(self.hass)
         
         params_states = {"zip": self.zip_code, "hoursInFuture": 24}

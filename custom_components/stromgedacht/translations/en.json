@@ -6,7 +6,8 @@
         "description": "Connect Home Assistant to the StromGedacht API.\n\nPlease enter your zip code.",
         "data": {
           "zip_code": "Zip Code",
-          "scan_interval": "Update Interval (minutes)"
+          "scan_interval": "Update Interval (minutes)",
+          "short_status": "Short status text (only color)"
         }
       }
     },
@@ -24,8 +25,40 @@
         "title": "StromGedacht Options",
         "description": "Configure how often data is fetched.",
         "data": {
-          "scan_interval": "Update Interval (minutes)"
+          "scan_interval": "Update Interval (minutes)",
+          "short_status": "Short status text (only color)"
         }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "state": {
+        "name": "Status",
+        "state": {
+          "super_green": "Super Green (Grid-serving)",
+          "green": "Green (Normal Operation)",
+          "orange": "Orange (Reduce Consumption)",
+          "red": "Red (Avoid Power Shortage)"
+        }
+      },
+      "state_short": {
+        "name": "Status",
+        "state": {
+          "super_green": "Super Green",
+          "green": "Green",
+          "orange": "Orange",
+          "red": "Red"
+        }
+      },
+      "renewable_energy": {
+        "name": "Renewable Energy"
+      },
+      "grid_load": {
+        "name": "Grid Load"
+      },
+      "residual_load": {
+        "name": "Residual Load"
       }
     }
   }
