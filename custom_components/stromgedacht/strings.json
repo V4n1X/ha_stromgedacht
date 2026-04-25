@@ -31,6 +31,14 @@
       }
     }
   },
+  "device_automation": {
+    "trigger_type": {
+      "super_green": "Grid status becomes Super Green",
+      "green": "Grid status becomes Green",
+      "orange": "Grid status becomes Orange",
+      "red": "Grid status becomes Red"
+    }
+  },
   "entity": {
     "sensor": {
       "state": {
