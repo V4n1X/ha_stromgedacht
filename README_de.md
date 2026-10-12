@@ -135,6 +135,12 @@ Die Ampel sagt dir, was du *jetzt* tun solltest. Um zu entscheiden, *wann* flexi
 
 Mit der [ApexCharts Card](https://github.com/RomRider/apexcharts-card) (über HACS erhältlich) bekommst du ein Prognose-Diagramm ähnlich der StromGedacht-App:
 
+<p align="left">
+  <img src="https://github.com/user-attachments/assets/5b84eb16-790c-4e1c-8519-99dd49a9e824" alt="StromGedacht Prognose-Diagramm mit ApexCharts" width="600">
+</p>
+
+*Die Konfiguration unten zeichnet zusätzlich die Supergrün-Schwelle als gestrichelte Linie ein.*
+
 <details>
 <summary>Konfiguration der Karte</summary>
 

@@ -135,6 +135,12 @@ The traffic light tells you what to do *now*. To decide *when* to run flexible c
 
 With the [ApexCharts Card](https://github.com/RomRider/apexcharts-card) (available in HACS) you get a forecast chart similar to the StromGedacht app:
 
+<p align="left">
+  <img src="https://github.com/user-attachments/assets/5b84eb16-790c-4e1c-8519-99dd49a9e824" alt="StromGedacht forecast chart with ApexCharts" width="600">
+</p>
+
+*Example with German labels. The configuration below additionally draws the super green threshold as a dashed line.*
+
 <details>
 <summary>Card configuration</summary>
 
