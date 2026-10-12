@@ -43,7 +43,7 @@ Diese Custom Integration bringt [StromGedacht](https://www.stromgedacht.de), die
 ## 📸 Vorschau
 
 <p align="left">
-  <img src="https://github.com/user-attachments/assets/f12b0c5e-2115-40ba-b548-47548c1bc120" alt="StromGedacht Dashboard Beispiel" width="600">
+  <img src="images/preview.png" alt="StromGedacht Dashboard Beispiel" width="600">
 </p>
 
 ## 📦 Installation
