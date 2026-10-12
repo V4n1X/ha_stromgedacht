@@ -217,7 +217,7 @@ content: |
   - {{ as_timestamp(s.from) | timestamp_custom("%a %H:%M") }} – {{ as_timestamp(s.to) | timestamp_custom("%a %H:%M") }}: {{ names[codes[s.state]] }}
   {%- endfor %}
 
-  **Beste Zeit:** {{ as_timestamp(states("sensor.stromgedacht_70173_beste_verbrauchszeit"), 0) | timestamp_custom("%a %H:%M") }}
+  **Beste Zeit:** {{ as_timestamp(states("sensor.stromgedacht_70173_beste_verbrauchszeit"), 0) | timestamp_custom("%a %H:%M") if has_value("sensor.stromgedacht_70173_beste_verbrauchszeit") else "keine Daten" }}
 ```
 
 </details>

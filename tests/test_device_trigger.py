@@ -56,22 +56,30 @@ async def _change_api_state(
     await hass.async_block_till_done(wait_background_tasks=True)
 
 
-async def _setup_automation(hass: HomeAssistant, device_id: str, entity_id: str) -> list:
+async def _setup_automation(
+    hass: HomeAssistant,
+    device_id: str,
+    entity_id: str,
+    duration: dict | None = None,
+) -> list:
     calls: list[ServiceCall] = []
     hass.services.async_register("test", "automation", calls.append)
+    trigger = {
+        "platform": "device",
+        "domain": DOMAIN,
+        "device_id": device_id,
+        "entity_id": entity_id,
+        "type": "red",
+    }
+    if duration is not None:
+        trigger["for"] = duration
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
         {
             automation.DOMAIN: [
                 {
-                    "trigger": {
-                        "platform": "device",
-                        "domain": DOMAIN,
-                        "device_id": device_id,
-                        "entity_id": entity_id,
-                        "type": "red",
-                    },
+                    "trigger": trigger,
                     "action": {"service": "test.automation", "data": {"trigger": "red"}},
                 }
             ]
@@ -113,3 +121,32 @@ async def test_trigger_with_entity_id_from_pr3(
 
     await _change_api_state(hass, aioclient_mock, freezer, 4)
     assert len(calls) == 1
+
+
+async def test_trigger_with_duration(
+    hass: HomeAssistant,
+    setup_integration: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    freezer,
+) -> None:
+    """A trigger with 'for' fires only after the state held for that long."""
+    device_id = _device_id(hass, setup_integration)
+    registry_id = er.async_get(hass).async_get(STATUS).id
+    calls = await _setup_automation(
+        hass, device_id, registry_id, duration={"minutes": 10}
+    )
+
+    await _change_api_state(hass, aioclient_mock, freezer, 4)
+    assert hass.states.get(STATUS).state == "red"
+    assert len(calls) == 0
+
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    freezer.tick(timedelta(minutes=6))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data == {"trigger": "red"}
