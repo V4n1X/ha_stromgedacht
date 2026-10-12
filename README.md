@@ -20,7 +20,7 @@
 
 This custom integration brings [StromGedacht](https://www.stromgedacht.de), the grid traffic light of the transmission system operator TransnetBW, into Home Assistant. It shows the current and upcoming state of the power grid in Baden-Württemberg (Germany) and helps you to **shift your consumption** to times with a lot of renewable energy and away from times when the grid is under pressure.
 
-## Contents
+## 📑 Contents
 
 - [Features](#-features)
 - [Installation](#-installation)
@@ -50,7 +50,7 @@ This custom integration brings [StromGedacht](https://www.stromgedacht.de), the 
 
 Requires Home Assistant **2025.8** or newer.
 
-### HACS (recommended)
+### 🚀 HACS (recommended)
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=V4n1X&repository=ha_stromgedacht&category=Integration)
 
@@ -58,7 +58,7 @@ Requires Home Assistant **2025.8** or newer.
 2. Search for **StromGedacht** and install it.
 3. Restart Home Assistant.
 
-### Manual
+### 🔨 Manual
 
 1. Download the latest [release](https://github.com/V4n1X/ha_stromgedacht/releases).
 2. Copy the folder `custom_components/stromgedacht` to the `config/custom_components/` directory of your Home Assistant.
@@ -87,7 +87,7 @@ All entities belong to one device per zip code.
 > [!NOTE]
 > The entity IDs depend on the language of your Home Assistant. The examples in this README use English entity IDs with the zip code `70173`, e.g. `sensor.stromgedacht_70173_residual_load`. In German it is `sensor.stromgedacht_70173_residuallast`. You find your entity IDs on the device page of the integration.
 
-### Status
+### 🚦 Status
 
 | Entity | Description | Attributes |
 | :--- | :--- | :--- |
@@ -102,7 +102,7 @@ All entities belong to one device per zip code.
 
 The short status text option only changes the displayed text. Automations always use the states from the table.
 
-### Planning
+### 📅 Planning
 
 | Entity | Description | Attributes |
 | :--- | :--- | :--- |
@@ -112,7 +112,7 @@ The short status text option only changes the displayed text. Automations always
 
 These are timestamp sensors. They are `unknown` if there is no such period or forecast ahead. If a period is already running, the sensor shows its start in the past and the `end` attribute tells you how long it lasts.
 
-### Forecast
+### ⚡ Forecast
 
 | Entity | Description | Attributes |
 | :--- | :--- | :--- |
@@ -131,7 +131,7 @@ The traffic light tells you what to do *now*. To decide *when* to run flexible c
 - **Next Super Green** and **Next Reduce Consumption** tell you when the next periods start and end.
 - The forecast sensors provide the complete curves for charts.
 
-### Forecast chart
+### 📈 Forecast chart
 
 With the [ApexCharts Card](https://github.com/RomRider/apexcharts-card) (available in HACS) you get a forecast chart similar to the StromGedacht app:
 
@@ -194,7 +194,7 @@ series:
 
 </details>
 
-### Upcoming states
+### 📋 Upcoming states
 
 A markdown card lists the upcoming traffic light states and the best time:
 
@@ -218,11 +218,11 @@ content: |
 
 ## 🤖 Automations
 
-### Device triggers
+### 🎯 Device triggers
 
 In the automation editor, choose **Device** as trigger, select your StromGedacht device and pick one of the triggers, e.g. **Grid status becomes Super Green**. An optional duration can be set.
 
-### Examples
+### 💡 Examples
 
 <details>
 <summary>Turn on a consumer when the grid gets super green</summary>

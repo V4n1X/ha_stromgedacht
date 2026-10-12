@@ -20,7 +20,7 @@
 
 Diese Custom Integration bringt [StromGedacht](https://www.stromgedacht.de), die Netz-Ampel des Übertragungsnetzbetreibers TransnetBW, in Home Assistant. Sie zeigt den aktuellen und kommenden Zustand des Stromnetzes in Baden-Württemberg und hilft dir, deinen **Verbrauch zu verschieben** – hin zu Zeiten mit viel erneuerbarer Energie und weg von Zeiten, in denen das Netz unter Druck steht.
 
-## Inhalt
+## 📑 Inhalt
 
 - [Funktionen](#-funktionen)
 - [Installation](#-installation)
@@ -50,7 +50,7 @@ Diese Custom Integration bringt [StromGedacht](https://www.stromgedacht.de), die
 
 Voraussetzung ist Home Assistant **2025.8** oder neuer.
 
-### HACS (empfohlen)
+### 🚀 HACS (empfohlen)
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=V4n1X&repository=ha_stromgedacht&category=Integration)
 
@@ -58,7 +58,7 @@ Voraussetzung ist Home Assistant **2025.8** oder neuer.
 2. Suche nach **StromGedacht** und installiere es.
 3. Starte Home Assistant neu.
 
-### Manuell
+### 🔨 Manuell
 
 1. Lade das neueste [Release](https://github.com/V4n1X/ha_stromgedacht/releases) herunter.
 2. Kopiere den Ordner `custom_components/stromgedacht` in das Verzeichnis `config/custom_components/` deines Home Assistant.
@@ -87,7 +87,7 @@ Alle Entitäten gehören zu einem Gerät pro Postleitzahl.
 > [!NOTE]
 > Die Entitäts-IDs hängen von der Sprache deiner Home-Assistant-Installation ab. Die Beispiele in dieser Anleitung verwenden deutsche Entitäts-IDs mit der Postleitzahl `70173`, z.B. `sensor.stromgedacht_70173_residuallast`. Auf Englisch heißt sie `sensor.stromgedacht_70173_residual_load`. Deine Entitäts-IDs findest du auf der Geräteseite der Integration.
 
-### Status
+### 🚦 Status
 
 | Entität | Beschreibung | Attribute |
 | :--- | :--- | :--- |
@@ -102,7 +102,7 @@ Alle Entitäten gehören zu einem Gerät pro Postleitzahl.
 
 Die Option „Kurzer Statustext“ ändert nur den angezeigten Text. In Automationen gelten immer die Zustände aus der Tabelle.
 
-### Planung
+### 📅 Planung
 
 | Entität | Beschreibung | Attribute |
 | :--- | :--- | :--- |
@@ -112,7 +112,7 @@ Die Option „Kurzer Statustext“ ändert nur den angezeigten Text. In Automati
 
 Das sind Zeitstempel-Sensoren. Sie sind `unknown`, wenn kein solcher Zeitraum bzw. keine Prognose vorliegt. Läuft ein Zeitraum bereits, zeigt der Sensor dessen Beginn in der Vergangenheit, und das Attribut `end` verrät, wie lange er noch dauert.
 
-### Prognose
+### ⚡ Prognose
 
 | Entität | Beschreibung | Attribute |
 | :--- | :--- | :--- |
@@ -131,7 +131,7 @@ Die Ampel sagt dir, was du *jetzt* tun solltest. Um zu entscheiden, *wann* flexi
 - **Nächstes Supergrün** und **Nächste Verbrauchsreduzierung** zeigen, wann die nächsten Zeiträume beginnen und enden.
 - Die Prognose-Sensoren liefern die kompletten Verläufe für Diagramme.
 
-### Prognose-Diagramm
+### 📈 Prognose-Diagramm
 
 Mit der [ApexCharts Card](https://github.com/RomRider/apexcharts-card) (über HACS erhältlich) bekommst du ein Prognose-Diagramm ähnlich der StromGedacht-App:
 
@@ -194,7 +194,7 @@ series:
 
 </details>
 
-### Kommende Zustände
+### 📋 Kommende Zustände
 
 Eine Markdown-Karte listet die kommenden Ampel-Zustände und die beste Verbrauchszeit auf:
 
@@ -218,11 +218,11 @@ content: |
 
 ## 🤖 Automationen
 
-### Geräte-Auslöser
+### 🎯 Geräte-Auslöser
 
 Wähle im Automationseditor **Gerät** als Auslöser, dann dein StromGedacht-Gerät und einen der Auslöser, z.B. **Netzstatus wird Supergrün**. Optional kann eine Dauer angegeben werden.
 
-### Beispiele
+### 💡 Beispiele
 
 <details>
 <summary>Verbraucher bei Supergrün einschalten</summary>
