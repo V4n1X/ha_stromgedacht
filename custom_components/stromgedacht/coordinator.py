@@ -24,6 +24,7 @@ from .const import (
     CONF_SCAN_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
     REQUEST_TIMEOUT,
+    STATES_HOURS_IN_FUTURE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -62,7 +63,7 @@ class StromGedachtDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self) -> dict[str, Any]:
         session = async_get_clientsession(self.hass)
 
-        params_states = {"zip": self.zip_code, "hoursInFuture": 24}
+        params_states = {"zip": self.zip_code, "hoursInFuture": STATES_HOURS_IN_FUTURE}
         params_forecast = {"zip": self.zip_code}
 
         try:

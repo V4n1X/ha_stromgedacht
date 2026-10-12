@@ -25,6 +25,8 @@ STATES_RESPONSE = {
     "states": [
         {"from": "2026-10-12T12:00:00+00:00", "to": "2026-10-12T16:00:00+00:00", "state": -1},
         {"from": "2026-10-12T16:00:00+00:00", "to": "2026-10-12T20:00:00+00:00", "state": 3},
+        {"from": "2026-10-12T20:00:00+00:00", "to": "2026-10-12T21:00:00+00:00", "state": 3},
+        {"from": "2026-10-12T21:00:00+00:00", "to": "2026-10-12T22:00:00+00:00", "state": 4},
     ]
 }
 
@@ -41,8 +43,8 @@ def _series(*values: float) -> list[dict[str, Any]]:
 FORECAST_RESPONSE = {
     "load": _series(5000, 5100, 5200, 5300),
     "renewableEnergy": _series(600, 650.5, 700, 750),
-    "residualLoad": _series(4400, 4449.5, 4500, 4550),
-    "superGreenThreshold": _series(1800, 1800, 1800, 1800),
+    "residualLoad": _series(4400, 4449.5, 4300, 4550),
+    "superGreenThreshold": _series(1800, 1850, 1900, 1950),
 }
 
 

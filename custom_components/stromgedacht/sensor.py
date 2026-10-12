@@ -35,6 +35,7 @@ DESCRIPTION_MAPPING = {
 # Limit the forecast attribute to keep the state machine small
 FORECAST_HISTORY = timedelta(hours=2)
 FORECAST_MAX_ITEMS = 192
+FORECAST_SLOT = timedelta(minutes=15)
 
 
 async def async_setup_entry(
@@ -50,6 +51,16 @@ async def async_setup_entry(
         StromGedachtForecastSensor(coordinator, entry, "renewableEnergy", "renewable_energy"),
         StromGedachtForecastSensor(coordinator, entry, "load", "grid_load"),
         StromGedachtForecastSensor(coordinator, entry, "residualLoad", "residual_load"),
+        StromGedachtForecastSensor(
+            coordinator, entry, "superGreenThreshold", "super_green_threshold"
+        ),
+        StromGedachtNextPeriodSensor(
+            coordinator, entry, "next_super_green", {"super_green"}
+        ),
+        StromGedachtNextPeriodSensor(
+            coordinator, entry, "next_reduce_consumption", {"orange", "red"}
+        ),
+        StromGedachtBestTimeSensor(coordinator, entry),
     ])
 
 
@@ -60,6 +71,22 @@ def _parse_datetime(value: Any) -> datetime | None:
     if parsed is not None and parsed.tzinfo is None:
         parsed = parsed.replace(tzinfo=dt_util.UTC)
     return parsed
+
+
+def _state_periods(states: list[dict[str, Any]]) -> list[tuple[datetime, datetime, str]]:
+    """Return the periods as (start, end, state), consecutive equal states merged."""
+    periods: list[tuple[datetime, datetime, str]] = []
+    for item in states:
+        start = _parse_datetime(item.get("from"))
+        end = _parse_datetime(item.get("to"))
+        state = STATE_SLUG_MAPPING.get(item.get("state"))
+        if start is None or end is None or state is None:
+            continue
+        if periods and periods[-1][2] == state and periods[-1][1] >= start:
+            periods[-1] = (periods[-1][0], end, state)
+        else:
+            periods.append((start, end, state))
+    return periods
 
 
 class StromGedachtEntity(CoordinatorEntity[StromGedachtDataUpdateCoordinator]):
@@ -176,3 +203,96 @@ class StromGedachtForecastSensor(StromGedachtEntity, SensorEntity):
                 limited_data.append(entry)
 
         return {"data_series": limited_data}
+
+
+class StromGedachtNextPeriodSensor(StromGedachtEntity, SensorEntity):
+    """Start of the current or next period with one of the given states."""
+
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+
+    def __init__(
+        self,
+        coordinator: StromGedachtDataUpdateCoordinator,
+        entry: StromGedachtConfigEntry,
+        translation_key: str,
+        states: set[str],
+    ) -> None:
+        super().__init__(coordinator, entry)
+        self._states = states
+        self._attr_translation_key = translation_key
+        self._attr_unique_id = f"{entry.entry_id}_{translation_key}"
+
+    @property
+    def _period(self) -> tuple[datetime, datetime, str] | None:
+        now = dt_util.now()
+        for period in _state_periods(self.coordinator.data.get("states", [])):
+            if period[2] in self._states and period[1] > now:
+                return period
+        return None
+
+    @property
+    def native_value(self) -> datetime | None:
+        period = self._period
+        return period[0] if period else None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        period = self._period
+        return {
+            "end": period[1].isoformat() if period else None,
+            "state": period[2] if period else None,
+        }
+
+
+class StromGedachtBestTimeSensor(StromGedachtEntity, SensorEntity):
+    """Start of the forecast slot with the lowest residual load from now on.
+
+    A low residual load means a high share of renewable energy, so this is
+    the best time to run deferrable consumers.
+    """
+
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_translation_key = "best_time"
+
+    def __init__(
+        self, coordinator: StromGedachtDataUpdateCoordinator, entry: StromGedachtConfigEntry
+    ) -> None:
+        super().__init__(coordinator, entry)
+        self._attr_unique_id = f"{entry.entry_id}_best_time"
+
+    @property
+    def _best_slot(self) -> tuple[datetime, float, datetime] | None:
+        # Include the slot that is currently running
+        start_limit = dt_util.now() - FORECAST_SLOT
+        forecast = self.coordinator.data.get("forecast", {}).get("residualLoad", [])
+        best: tuple[datetime, float] | None = None
+        last: datetime | None = None
+
+        for entry in forecast:
+            entry_dt = _parse_datetime(entry.get("dateTime"))
+            if entry_dt is None or entry_dt <= start_limit:
+                continue
+            try:
+                value = float(entry["value"])
+            except (KeyError, ValueError, TypeError):
+                continue
+            last = entry_dt
+            if best is None or value < best[1]:
+                best = (entry_dt, value)
+
+        if best is None or last is None:
+            return None
+        return best[0], best[1], last + FORECAST_SLOT
+
+    @property
+    def native_value(self) -> datetime | None:
+        slot = self._best_slot
+        return slot[0] if slot else None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        slot = self._best_slot
+        return {
+            "residual_load": slot[1] if slot else None,
+            "forecast_until": slot[2].isoformat() if slot else None,
+        }

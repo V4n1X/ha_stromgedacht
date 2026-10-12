@@ -27,6 +27,18 @@
       },
       "residual_load": {
         "default": "mdi:chart-line"
+      },
+      "super_green_threshold": {
+        "default": "mdi:arrow-collapse-down"
+      },
+      "next_super_green": {
+        "default": "mdi:leaf-circle-outline"
+      },
+      "next_reduce_consumption": {
+        "default": "mdi:alert-outline"
+      },
+      "best_time": {
+        "default": "mdi:clock-check-outline"
       }
     }
   }
