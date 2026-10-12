@@ -1,0 +1,33 @@
+{
+  "entity": {
+    "sensor": {
+      "state": {
+        "default": "mdi:help-circle",
+        "state": {
+          "super_green": "mdi:leaf",
+          "green": "mdi:check-circle",
+          "orange": "mdi:alert",
+          "red": "mdi:lightning-bolt"
+        }
+      },
+      "state_short": {
+        "default": "mdi:help-circle",
+        "state": {
+          "super_green": "mdi:leaf",
+          "green": "mdi:check-circle",
+          "orange": "mdi:alert",
+          "red": "mdi:lightning-bolt"
+        }
+      },
+      "renewable_energy": {
+        "default": "mdi:solar-power"
+      },
+      "grid_load": {
+        "default": "mdi:transmission-tower"
+      },
+      "residual_load": {
+        "default": "mdi:chart-line"
+      }
+    }
+  }
+}

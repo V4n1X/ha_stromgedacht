@@ -8,11 +8,18 @@
           "zip_code": "Postleitzahl (PLZ)",
           "scan_interval": "Abrufintervall (in Minuten)",
           "short_status": "Kurzer Statustext (Nur Farbe)"
+        },
+        "data_description": {
+          "zip_code": "Deutsche Postleitzahl (5-stellig) im Netzgebiet der TransnetBW, z.B. 70173.",
+          "scan_interval": "Wie oft die Daten von der API abgerufen werden (mindestens 5 Minuten).",
+          "short_status": "Nur die Farbe als Statustext anzeigen (z.B. \"Grün\") statt der ausführlichen Beschreibung."
         }
       }
     },
     "error": {
-      "cannot_connect": "Verbindung zur API fehlgeschlagen. Bitte Internet und PLZ prüfen.",
+      "cannot_connect": "Verbindung zur API fehlgeschlagen. Bitte Internetverbindung prüfen.",
+      "invalid_zip_code": "Bitte gib eine gültige 5-stellige Postleitzahl ein.",
+      "no_data_for_zip_code": "StromGedacht liefert für diese Postleitzahl keine Daten. Unterstützt werden nur Postleitzahlen im Netzgebiet der TransnetBW (überwiegend Baden-Württemberg).",
       "unknown": "Ein unbekannter Fehler ist aufgetreten."
     },
     "abort": {
@@ -23,10 +30,14 @@
     "step": {
       "init": {
         "title": "StromGedacht Einstellungen",
-        "description": "Hier kannst du anpassen, wie oft die Daten aktualisiert werden.",
+        "description": "Hier kannst du anpassen, wie oft die Daten aktualisiert werden und wie der Status angezeigt wird.",
         "data": {
           "scan_interval": "Abrufintervall (Minuten)",
           "short_status": "Kurzer Statustext (Nur Farbe)"
+        },
+        "data_description": {
+          "scan_interval": "Wie oft die Daten von der API abgerufen werden (mindestens 5 Minuten).",
+          "short_status": "Nur die Farbe als Statustext anzeigen (z.B. \"Grün\") statt der ausführlichen Beschreibung."
         }
       }
     }
@@ -37,6 +48,9 @@
       "green": "Netzstatus wird Grün",
       "orange": "Netzstatus wird Orange",
       "red": "Netzstatus wird Rot"
+    },
+    "extra_fields": {
+      "for": "Dauer"
     }
   },
   "entity": {

@@ -8,11 +8,18 @@
           "zip_code": "Zip Code",
           "scan_interval": "Update Interval (minutes)",
           "short_status": "Short status text (only color)"
+        },
+        "data_description": {
+          "zip_code": "German zip code (5 digits) within the TransnetBW grid area, e.g. 70173.",
+          "scan_interval": "How often the data is fetched from the API (minimum 5 minutes).",
+          "short_status": "Show only the color as status text (e.g. \"Green\") instead of the full description."
         }
       }
     },
     "error": {
-      "cannot_connect": "Connection failed. Please check zip code and internet.",
+      "cannot_connect": "Connection failed. Please check your internet connection.",
+      "invalid_zip_code": "Please enter a valid 5-digit zip code.",
+      "no_data_for_zip_code": "StromGedacht provides no data for this zip code. Only zip codes in the TransnetBW grid area (mostly Baden-Württemberg) are supported.",
       "unknown": "Unexpected error."
     },
     "abort": {
@@ -23,10 +30,14 @@
     "step": {
       "init": {
         "title": "StromGedacht Options",
-        "description": "Configure how often data is fetched.",
+        "description": "Configure how often data is fetched and how the status is displayed.",
         "data": {
           "scan_interval": "Update Interval (minutes)",
           "short_status": "Short status text (only color)"
+        },
+        "data_description": {
+          "scan_interval": "How often the data is fetched from the API (minimum 5 minutes).",
+          "short_status": "Show only the color as status text (e.g. \"Green\") instead of the full description."
         }
       }
     }
@@ -37,6 +48,9 @@
       "green": "Grid status becomes Green",
       "orange": "Grid status becomes Orange",
       "red": "Grid status becomes Red"
+    },
+    "extra_fields": {
+      "for": "Duration"
     }
   },
   "entity": {
