@@ -9,7 +9,7 @@ CONF_SHORT_STATUS = "short_status"
 URL_STATES = "https://api.stromgedacht.de/v1/statesRelative"
 URL_FORECAST = "https://api.stromgedacht.de/v1/forecast"
 REQUEST_TIMEOUT = 20  # Seconds
-STATES_HOURS_IN_FUTURE = 48  # Maximum the API allows
+STATES_HOURS_IN_FUTURE = 48  # Enough for planning; the API allows up to 52
 
 # Defaults
 DEFAULT_SCAN_INTERVAL = 15  # Minutes
