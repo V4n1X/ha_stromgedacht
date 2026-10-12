@@ -1,209 +1,178 @@
 """Sensor platform for StromGedacht."""
 from __future__ import annotations
 
-from datetime import timedelta
-from dateutil.parser import parse
+from datetime import datetime, timedelta
+from typing import Any
+
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorDeviceClass,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfPower
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, CONF_SHORT_STATUS, DEFAULT_SHORT_STATUS
-from .coordinator import StromGedachtDataUpdateCoordinator
+from .const import (
+    DOMAIN,
+    CONF_SHORT_STATUS,
+    CONF_ZIP_CODE,
+    DEFAULT_SHORT_STATUS,
+    STATE_SLUG_MAPPING,
+)
+from .coordinator import StromGedachtConfigEntry, StromGedachtDataUpdateCoordinator
 
-STATE_SLUG_MAPPING = {
-    -1: "super_green",
-    1: "green",
-    3: "orange",
-    4: "red",
+DESCRIPTION_MAPPING = {
+    -1: "Use electricity now to support grid stability",
+    1: "Normal operation - no action required",
+    3: "Reduce consumption to save costs and CO2",
+    4: "Reduce consumption to prevent power shortages",
 }
 
-ICON_MAPPING = {
-    -1: "mdi:leaf",
-    1: "mdi:check-circle",
-    3: "mdi:alert",
-    4: "mdi:lightning-bolt",
-}
+# Limit the forecast attribute to keep the state machine small
+FORECAST_HISTORY = timedelta(hours=2)
+FORECAST_MAX_ITEMS = 192
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: StromGedachtConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor."""
-    coordinator: StromGedachtDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    
-    entities = []
-    
-    entities.append(StromGedachtStateSensor(coordinator, entry))
-    if coordinator.data and "forecast" in coordinator.data:
-        entities.append(StromGedachtForecastSensor(
-            coordinator, entry, "renewableEnergy", "renewable_energy", "mdi:solar-power"
-        ))
-        entities.append(StromGedachtForecastSensor(
-            coordinator, entry, "load", "grid_load", "mdi:transmission-tower"
-        ))
-        entities.append(StromGedachtForecastSensor(
-            coordinator, entry, "residualLoad", "residual_load", "mdi:chart-line"
-        ))
+    coordinator = entry.runtime_data
 
-    async_add_entities(entities)
+    async_add_entities([
+        StromGedachtStateSensor(coordinator, entry),
+        StromGedachtForecastSensor(coordinator, entry, "renewableEnergy", "renewable_energy"),
+        StromGedachtForecastSensor(coordinator, entry, "load", "grid_load"),
+        StromGedachtForecastSensor(coordinator, entry, "residualLoad", "residual_load"),
+    ])
 
 
-class StromGedachtStateSensor(CoordinatorEntity, SensorEntity):
-    def __init__(self, coordinator, entry) -> None:
+def _parse_datetime(value: Any) -> datetime | None:
+    if not isinstance(value, str):
+        return None
+    parsed = dt_util.parse_datetime(value)
+    if parsed is not None and parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=dt_util.UTC)
+    return parsed
+
+
+class StromGedachtEntity(CoordinatorEntity[StromGedachtDataUpdateCoordinator]):
+    """Base entity, all sensors belong to one service device per zip code."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self, coordinator: StromGedachtDataUpdateCoordinator, entry: StromGedachtConfigEntry
+    ) -> None:
         super().__init__(coordinator)
         self._entry = entry
-        self._attr_unique_id = f"{entry.entry_id}_state"
-        self._attr_has_entity_name = True
-
-    @property
-    def translation_key(self) -> str:
-        short_status = self._entry.options.get(
-            CONF_SHORT_STATUS, 
-            self._entry.data.get(CONF_SHORT_STATUS, DEFAULT_SHORT_STATUS)
-        )
-        return "state_short" if short_status else "state"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._entry.entry_id)},
-            name=f"StromGedacht {self._entry.data['zip_code']}",
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry.entry_id)},
+            name=f"StromGedacht {entry.data[CONF_ZIP_CODE]}",
             manufacturer="TransnetBW",
             model="StromGedacht API",
             configuration_url="https://stromgedacht.de",
             entry_type=DeviceEntryType.SERVICE,
         )
+
+
+class StromGedachtStateSensor(StromGedachtEntity, SensorEntity):
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = list(STATE_SLUG_MAPPING.values())
+    # The forecast of upcoming states changes with every update and is not
+    # useful in the history, so keep it out of the recorder database.
+    _unrecorded_attributes = frozenset({"future_states"})
+
+    def __init__(
+        self, coordinator: StromGedachtDataUpdateCoordinator, entry: StromGedachtConfigEntry
+    ) -> None:
+        super().__init__(coordinator, entry)
+        self._attr_unique_id = f"{entry.entry_id}_state"
+        short_status = entry.options.get(
+            CONF_SHORT_STATUS,
+            entry.data.get(CONF_SHORT_STATUS, DEFAULT_SHORT_STATUS)
+        )
+        self._attr_translation_key = "state_short" if short_status else "state"
+
+    @property
+    def _current_state_code(self) -> int | None:
+        states = self.coordinator.data.get("states", [])
+        if not states:
+            return None
+        return states[0].get("state")
 
     @property
     def native_value(self) -> str | None:
-        states = self.coordinator.data.get("states", [])
-        if not states:
-            return "unknown"
-        
-        current_state_code = states[0].get("state", 0)
-        return STATE_SLUG_MAPPING.get(current_state_code, "unknown")
+        return STATE_SLUG_MAPPING.get(self._current_state_code)
 
     @property
-    def icon(self) -> str:
-        states = self.coordinator.data.get("states", [])
-        if not states:
-            return "mdi:help-circle"
-        
-        current_state_code = states[0].get("state", 1)
-        return ICON_MAPPING.get(current_state_code, "mdi:help-circle")
-
-    @property
-    def extra_state_attributes(self) -> dict:
-        states = self.coordinator.data.get("states", [])
-        current_code = states[0].get("state", 0) if states else 0
-        
-        description = "Data not available"
-        if current_code == -1:
-            description = "Use electricity now to support grid stability"
-        elif current_code == 1:
-            description = "Normal operation – no action required"
-        elif current_code == 3:
-            description = "Reduce consumption to save costs and CO2"
-        elif current_code == 4:
-            description = "Reduce consumption to prevent power shortages"
-
+    def extra_state_attributes(self) -> dict[str, Any]:
         return {
-            "description": description,
-            "future_states": states,
-            "zip_code": self._entry.data['zip_code']
+            "description": DESCRIPTION_MAPPING.get(
+                self._current_state_code, "Data not available"
+            ),
+            "future_states": self.coordinator.data.get("states", []),
+            "zip_code": self._entry.data[CONF_ZIP_CODE],
         }
 
 
-class StromGedachtForecastSensor(CoordinatorEntity, SensorEntity):
+class StromGedachtForecastSensor(StromGedachtEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.POWER
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = UnitOfPower.MEGA_WATT
-    _attr_has_entity_name = True
+    # The forecast series is only meant for charts of the current state
+    _unrecorded_attributes = frozenset({"data_series"})
 
-    def __init__(self, coordinator, entry, json_key, translation_key, icon):
-        super().__init__(coordinator)
-        self._entry = entry
+    def __init__(
+        self,
+        coordinator: StromGedachtDataUpdateCoordinator,
+        entry: StromGedachtConfigEntry,
+        json_key: str,
+        translation_key: str,
+    ) -> None:
+        super().__init__(coordinator, entry)
         self._json_key = json_key
         self._attr_translation_key = translation_key
         self._attr_unique_id = f"{entry.entry_id}_{json_key}"
-        self._attr_icon = icon
 
     @property
-    def device_info(self) -> DeviceInfo:
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._entry.entry_id)},
-            name=f"StromGedacht {self._entry.data['zip_code']}",
-            manufacturer="TransnetBW",
-            model="StromGedacht API",
-            configuration_url="https://stromgedacht.de",
-            entry_type=DeviceEntryType.SERVICE,
-        )
+    def _forecast(self) -> list[dict[str, Any]]:
+        return self.coordinator.data.get("forecast", {}).get(self._json_key, [])
 
     @property
     def native_value(self) -> float | None:
-        forecast_data = self.coordinator.data.get("forecast", {}).get(self._json_key, [])
-        
-        if not forecast_data:
-            return None
-
         now = dt_util.now()
         current_value = None
 
-        for entry in forecast_data:
-            try:
-                entry_dt = parse(entry["dateTime"])
-                if entry_dt.tzinfo is None:
-                    entry_dt = entry_dt.replace(tzinfo=dt_util.UTC)
-
-                if entry_dt <= now:
-                    current_value = float(entry["value"])
-                else:
-                    break
-            except (ValueError, TypeError):
+        for entry in self._forecast:
+            entry_dt = _parse_datetime(entry.get("dateTime"))
+            if entry_dt is None:
                 continue
-        
+            if entry_dt > now:
+                break
+            try:
+                current_value = float(entry["value"])
+            except (KeyError, ValueError, TypeError):
+                continue
+
         return current_value
 
     @property
-    def extra_state_attributes(self) -> dict:
-        raw_data = self.coordinator.data.get("forecast", {}).get(self._json_key, [])
-        
-        if not raw_data:
-            return {}
-
-        now = dt_util.now()
+    def extra_state_attributes(self) -> dict[str, Any]:
+        start_limit = dt_util.now() - FORECAST_HISTORY
         limited_data = []
 
-        start_limit = now - timedelta(hours=2)
-        
-        count = 0
-        MAX_ITEMS = 192
-
-        for entry in raw_data:
-            if count >= MAX_ITEMS:
+        for entry in self._forecast:
+            if len(limited_data) >= FORECAST_MAX_ITEMS:
                 break
-            
-            try:
-                entry_dt = parse(entry["dateTime"])
-                if entry_dt.tzinfo is None:
-                    entry_dt = entry_dt.replace(tzinfo=dt_util.UTC)
+            entry_dt = _parse_datetime(entry.get("dateTime"))
+            if entry_dt is not None and entry_dt >= start_limit:
+                limited_data.append(entry)
 
-                if entry_dt >= start_limit:
-                    limited_data.append(entry)
-                    count += 1
-            except (ValueError, TypeError):
-                continue
-
-        return {
-            "data_series": limited_data
-        }
+        return {"data_series": limited_data}
