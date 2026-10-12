@@ -81,6 +81,18 @@
       },
       "residual_load": {
         "name": "Residuallast"
+      },
+      "super_green_threshold": {
+        "name": "Supergrün-Schwelle"
+      },
+      "next_super_green": {
+        "name": "Nächstes Supergrün"
+      },
+      "next_reduce_consumption": {
+        "name": "Nächste Verbrauchsreduzierung"
+      },
+      "best_time": {
+        "name": "Beste Verbrauchszeit"
       }
     }
   }

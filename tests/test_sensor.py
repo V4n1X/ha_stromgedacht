@@ -60,6 +60,10 @@ async def test_entities_keep_unique_ids(
         f"{entry_id}_renewableEnergy",
         f"{entry_id}_load",
         f"{entry_id}_residualLoad",
+        f"{entry_id}_superGreenThreshold",
+        f"{entry_id}_next_super_green",
+        f"{entry_id}_next_reduce_consumption",
+        f"{entry_id}_best_time",
     }
 
     [device] = dr.async_entries_for_config_entry(dr.async_get(hass), entry_id)
@@ -85,12 +89,50 @@ async def test_forecast_sensors(hass: HomeAssistant, setup_integration: MockConf
         "sensor.stromgedacht_70173_grid_load": "5100.0",
         "sensor.stromgedacht_70173_renewable_energy": "650.5",
         "sensor.stromgedacht_70173_residual_load": "4449.5",
+        "sensor.stromgedacht_70173_super_green_threshold": "1850.0",
     }
     for entity_id, value in expected.items():
         state = hass.states.get(entity_id)
         assert state.state == value, entity_id
         assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "MW"
         assert len(state.attributes["data_series"]) == 4
+
+
+async def test_planning_sensors(hass: HomeAssistant, setup_integration: MockConfigEntry) -> None:
+    # The super green period is running since 12:00
+    state = hass.states.get("sensor.stromgedacht_70173_next_super_green")
+    assert state.state == "2026-10-12T12:00:00+00:00"
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TIMESTAMP
+    assert state.attributes["end"] == "2026-10-12T16:00:00+00:00"
+    assert state.attributes["state"] == "super_green"
+
+    # Both orange periods are merged, red follows afterwards
+    state = hass.states.get("sensor.stromgedacht_70173_next_reduce_consumption")
+    assert state.state == "2026-10-12T16:00:00+00:00"
+    assert state.attributes["end"] == "2026-10-12T21:00:00+00:00"
+    assert state.attributes["state"] == "orange"
+
+    # The 11:45 slot is over, 12:15 has the lowest residual load
+    state = hass.states.get("sensor.stromgedacht_70173_best_consumption_time")
+    assert state.state == "2026-10-12T12:15:00+00:00"
+    assert state.attributes["residual_load"] == 4300
+    assert state.attributes["forecast_until"] == "2026-10-12T12:45:00+00:00"
+
+
+async def test_planning_sensors_follow_time(
+    hass: HomeAssistant,
+    setup_integration: MockConfigEntry,
+    freezer,
+) -> None:
+    # At 16:30 the super green period is over and the forecast has ended
+    freezer.move_to("2026-10-12T16:30:00+00:00")
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get("sensor.stromgedacht_70173_next_super_green").state == "unknown"
+    assert hass.states.get("sensor.stromgedacht_70173_best_consumption_time").state == "unknown"
+    state = hass.states.get("sensor.stromgedacht_70173_next_reduce_consumption")
+    assert state.state == "2026-10-12T16:00:00+00:00"
 
 
 async def test_unknown_state_and_api_outage(

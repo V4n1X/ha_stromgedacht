@@ -81,6 +81,18 @@
       },
       "residual_load": {
         "name": "Residual Load"
+      },
+      "super_green_threshold": {
+        "name": "Super Green Threshold"
+      },
+      "next_super_green": {
+        "name": "Next Super Green"
+      },
+      "next_reduce_consumption": {
+        "name": "Next Reduce Consumption"
+      },
+      "best_time": {
+        "name": "Best Consumption Time"
       }
     }
   }
