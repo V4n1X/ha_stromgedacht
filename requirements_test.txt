@@ -1,2 +1,2 @@
-# Pins Home Assistant 2026.10.1, update together with new Home Assistant releases
-pytest-homeassistant-custom-component==0.13.372
+# Pins Home Assistant 2026.10.2, update together with new Home Assistant releases
+pytest-homeassistant-custom-component==0.13.373
