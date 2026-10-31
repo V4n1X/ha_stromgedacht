@@ -1,20 +1,17 @@
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="images/stromgedacht_logo_dark.svg">
-    <img src="images/stromgedacht_logo.svg" alt="StromGedacht" width="420">
-  </picture>
+<p>
+  <img src="images/stromgedacht_logo.svg" alt="StromGedacht" width="420">
 </p>
 
-<h1 align="center">StromGedacht für Home Assistant</h1>
+<h1>StromGedacht für Home Assistant</h1>
 
-<p align="center">
+<p>
   <a href="https://github.com/hacs/integration"><img src="https://img.shields.io/badge/HACS-Default-41BDF5.svg" alt="HACS Default"></a>
   <a href="https://github.com/V4n1X/ha_stromgedacht/releases"><img src="https://img.shields.io/github/v/release/V4n1X/ha_stromgedacht" alt="GitHub release"></a>
   <a href="https://github.com/V4n1X/ha_stromgedacht/actions/workflows/tests.yaml"><img src="https://github.com/V4n1X/ha_stromgedacht/actions/workflows/tests.yaml/badge.svg" alt="Tests"></a>
   <a href="https://github.com/V4n1X"><img src="https://img.shields.io/badge/maintainer-V4n1X-blue" alt="Maintainer"></a>
 </p>
 
-<p align="center">
+<p>
   <a href="README.md">🇬🇧 English Description</a>
 </p>
 
@@ -42,7 +39,7 @@ Diese Custom Integration bringt [StromGedacht](https://www.stromgedacht.de), die
 
 ## 📸 Vorschau
 
-<p align="left">
+<p>
   <img src="images/preview.png" alt="StromGedacht Dashboard Beispiel" width="600">
 </p>
 
@@ -135,14 +132,13 @@ Die Ampel sagt dir, was du *jetzt* tun solltest. Um zu entscheiden, *wann* flexi
 
 Mit der [ApexCharts Card](https://github.com/RomRider/apexcharts-card) (über HACS erhältlich) bekommst du ein Prognose-Diagramm ähnlich der StromGedacht-App:
 
-<p align="left">
+<p>
   <img src="https://github.com/user-attachments/assets/5b84eb16-790c-4e1c-8519-99dd49a9e824" alt="StromGedacht Prognose-Diagramm mit ApexCharts" width="600">
 </p>
 
 *Die Konfiguration unten zeichnet zusätzlich die Supergrün-Schwelle als gestrichelte Linie ein.*
 
-<details>
-<summary>Konfiguration der Karte</summary>
+#### Konfiguration der Karte
 
 ```yaml
 type: custom:apexcharts-card
@@ -198,14 +194,11 @@ series:
       return entity.attributes.data_series.map((e) => [new Date(e.dateTime).getTime(), e.value]);
 ```
 
-</details>
-
 ### 📋 Kommende Zustände
 
 Eine Markdown-Karte listet die kommenden Ampel-Zustände und die beste Verbrauchszeit auf:
 
-<details>
-<summary>Konfiguration der Karte</summary>
+#### Konfiguration der Karte
 
 ```yaml
 type: markdown
@@ -220,8 +213,6 @@ content: |
   **Beste Zeit:** {{ as_timestamp(states("sensor.stromgedacht_70173_beste_verbrauchszeit"), 0) | timestamp_custom("%a %H:%M") if has_value("sensor.stromgedacht_70173_beste_verbrauchszeit") else "keine Daten" }}
 ```
 
-</details>
-
 ## 🤖 Automationen
 
 ### 🎯 Geräte-Auslöser
@@ -230,8 +221,7 @@ Wähle im Automationseditor **Gerät** als Auslöser, dann dein StromGedacht-Ger
 
 ### 💡 Beispiele
 
-<details>
-<summary>Verbraucher bei Supergrün einschalten</summary>
+#### Verbraucher bei Supergrün einschalten
 
 ```yaml
 triggers:
@@ -244,10 +234,7 @@ actions:
       entity_id: switch.waermepumpe_boost
 ```
 
-</details>
-
-<details>
-<summary>Spülmaschine zur besten Zeit starten</summary>
+#### Spülmaschine zur besten Zeit starten
 
 Die beste Zeit wird mit jeder Prognose aktualisiert, die Automation nutzt also immer die neueste Prognose.
 
@@ -265,10 +252,7 @@ actions:
       entity_id: switch.spuelmaschine
 ```
 
-</details>
-
-<details>
-<summary>Eine Stunde vor einer Verbrauchsreduzierung warnen</summary>
+#### Eine Stunde vor einer Verbrauchsreduzierung warnen
 
 ```yaml
 triggers:
@@ -284,8 +268,6 @@ actions:
         {{ as_timestamp(states("sensor.stromgedacht_70173_nachste_verbrauchsreduzierung")) | timestamp_custom("%H:%M") }}
         bis {{ as_timestamp(state_attr("sensor.stromgedacht_70173_nachste_verbrauchsreduzierung", "end")) | timestamp_custom("%H:%M") }} Uhr.
 ```
-
-</details>
 
 ## ❓ Fehlerbehebung
 

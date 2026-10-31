@@ -1,20 +1,17 @@
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="images/stromgedacht_logo_dark.svg">
-    <img src="images/stromgedacht_logo.svg" alt="StromGedacht" width="420">
-  </picture>
+<p>
+  <img src="images/stromgedacht_logo.svg" alt="StromGedacht" width="420">
 </p>
 
-<h1 align="center">StromGedacht for Home Assistant</h1>
+<h1>StromGedacht for Home Assistant</h1>
 
-<p align="center">
+<p>
   <a href="https://github.com/hacs/integration"><img src="https://img.shields.io/badge/HACS-Default-41BDF5.svg" alt="HACS Default"></a>
   <a href="https://github.com/V4n1X/ha_stromgedacht/releases"><img src="https://img.shields.io/github/v/release/V4n1X/ha_stromgedacht" alt="GitHub release"></a>
   <a href="https://github.com/V4n1X/ha_stromgedacht/actions/workflows/tests.yaml"><img src="https://github.com/V4n1X/ha_stromgedacht/actions/workflows/tests.yaml/badge.svg" alt="Tests"></a>
   <a href="https://github.com/V4n1X"><img src="https://img.shields.io/badge/maintainer-V4n1X-blue" alt="Maintainer"></a>
 </p>
 
-<p align="center">
+<p>
   <a href="README_de.md">🇩🇪 Deutsche Anleitung</a>
 </p>
 
@@ -42,7 +39,7 @@ This custom integration brings [StromGedacht](https://www.stromgedacht.de), the 
 
 ## 📸 Preview
 
-<p align="left">
+<p>
   <img src="images/preview.png" alt="StromGedacht Dashboard Example" width="600">
 </p>
 
@@ -135,14 +132,13 @@ The traffic light tells you what to do *now*. To decide *when* to run flexible c
 
 With the [ApexCharts Card](https://github.com/RomRider/apexcharts-card) (available in HACS) you get a forecast chart similar to the StromGedacht app:
 
-<p align="left">
+<p>
   <img src="https://github.com/user-attachments/assets/5b84eb16-790c-4e1c-8519-99dd49a9e824" alt="StromGedacht forecast chart with ApexCharts" width="600">
 </p>
 
 *Example with German labels. The configuration below additionally draws the super green threshold as a dashed line.*
 
-<details>
-<summary>Card configuration</summary>
+#### Card configuration
 
 ```yaml
 type: custom:apexcharts-card
@@ -198,14 +194,11 @@ series:
       return entity.attributes.data_series.map((e) => [new Date(e.dateTime).getTime(), e.value]);
 ```
 
-</details>
-
 ### 📋 Upcoming states
 
 A markdown card lists the upcoming traffic light states and the best time:
 
-<details>
-<summary>Card configuration</summary>
+#### Card configuration
 
 ```yaml
 type: markdown
@@ -220,8 +213,6 @@ content: |
   **Best time:** {{ as_timestamp(states("sensor.stromgedacht_70173_best_consumption_time"), 0) | timestamp_custom("%a %H:%M") if has_value("sensor.stromgedacht_70173_best_consumption_time") else "no data" }}
 ```
 
-</details>
-
 ## 🤖 Automations
 
 ### 🎯 Device triggers
@@ -230,8 +221,7 @@ In the automation editor, choose **Device** as trigger, select your StromGedacht
 
 ### 💡 Examples
 
-<details>
-<summary>Turn on a consumer when the grid gets super green</summary>
+#### Turn on a consumer when the grid gets super green
 
 ```yaml
 triggers:
@@ -244,10 +234,7 @@ actions:
       entity_id: switch.heat_pump_boost
 ```
 
-</details>
-
-<details>
-<summary>Start the dishwasher at the best time</summary>
+#### Start the dishwasher at the best time
 
 The best time is updated with every forecast update, so the automation always uses the latest forecast.
 
@@ -265,10 +252,7 @@ actions:
       entity_id: switch.dishwasher
 ```
 
-</details>
-
-<details>
-<summary>Get a warning one hour before consumption should be reduced</summary>
+#### Get a warning one hour before consumption should be reduced
 
 ```yaml
 triggers:
@@ -284,8 +268,6 @@ actions:
         {{ as_timestamp(states("sensor.stromgedacht_70173_next_reduce_consumption")) | timestamp_custom("%H:%M") }}
         until {{ as_timestamp(state_attr("sensor.stromgedacht_70173_next_reduce_consumption", "end")) | timestamp_custom("%H:%M") }}.
 ```
-
-</details>
 
 ## ❓ Troubleshooting
 
