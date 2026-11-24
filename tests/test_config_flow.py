@@ -18,7 +18,7 @@ from custom_components.stromgedacht.const import (
     URL_STATES,
 )
 
-from .conftest import FORECAST_RESPONSE, STATES_RESPONSE, ZIP_CODE
+from .conftest import FORECAST_RESPONSE, NO_FORECAST, STATES_RESPONSE, ZIP_CODE
 
 
 async def _start_flow(hass: HomeAssistant) -> str:
@@ -47,6 +47,44 @@ async def test_user_flow_creates_entry(hass: HomeAssistant, mock_api: AiohttpCli
     assert result["result"].state is ConfigEntryState.LOADED
 
 
+async def test_user_flow_limited_zip_code(
+    hass: HomeAssistant, mock_api_limited: AiohttpClientMocker
+) -> None:
+    """Zip codes without forecast are accepted after a note."""
+    flow_id = await _start_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(flow_id, {CONF_ZIP_CODE: ZIP_CODE})
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "limited"
+    assert result["description_placeholders"] == {CONF_ZIP_CODE: ZIP_CODE}
+
+    result = await hass.config_entries.flow.async_configure(flow_id, {})
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == f"StromGedacht ({ZIP_CODE})"
+    assert result["data"] == {
+        CONF_ZIP_CODE: ZIP_CODE,
+        CONF_SCAN_INTERVAL: 15,
+        CONF_SHORT_STATUS: False,
+    }
+    await hass.async_block_till_done()
+    assert result["result"].state is ConfigEntryState.LOADED
+
+
+async def test_user_flow_forecast_server_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Only a 404 means no forecast, other errors are connection errors."""
+    aioclient_mock.get(URL_STATES, json=STATES_RESPONSE)
+    aioclient_mock.get(URL_FORECAST, status=503)
+    flow_id = await _start_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(flow_id, {CONF_ZIP_CODE: ZIP_CODE})
+
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
 async def test_user_flow_invalid_zip_code(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
@@ -63,6 +101,7 @@ async def test_user_flow_no_data_for_zip_code(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     aioclient_mock.get(URL_STATES, status=400, text="No data is available")
+    aioclient_mock.get(URL_FORECAST, status=404, text=NO_FORECAST)
     flow_id = await _start_flow(hass)
 
     result = await hass.config_entries.flow.async_configure(flow_id, {CONF_ZIP_CODE: "12345"})
@@ -75,6 +114,7 @@ async def test_user_flow_cannot_connect_and_recover(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     aioclient_mock.get(URL_STATES, exc=aiohttp.ClientError)
+    aioclient_mock.get(URL_FORECAST, json=FORECAST_RESPONSE)
     flow_id = await _start_flow(hass)
 
     result = await hass.config_entries.flow.async_configure(flow_id, {CONF_ZIP_CODE: ZIP_CODE})
@@ -96,6 +136,7 @@ async def test_user_flow_server_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     aioclient_mock.get(URL_STATES, status=503)
+    aioclient_mock.get(URL_FORECAST, json=FORECAST_RESPONSE)
     flow_id = await _start_flow(hass)
 
     result = await hass.config_entries.flow.async_configure(flow_id, {CONF_ZIP_CODE: ZIP_CODE})

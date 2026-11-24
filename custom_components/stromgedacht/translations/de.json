@@ -10,16 +10,20 @@
           "short_status": "Kurzer Statustext (Nur Farbe)"
         },
         "data_description": {
-          "zip_code": "Deutsche Postleitzahl (5-stellig) im Netzgebiet der TransnetBW, z.B. 70173.",
+          "zip_code": "Deutsche Postleitzahl (5-stellig), z.B. 70173.",
           "scan_interval": "Wie oft die Daten von der API abgerufen werden (mindestens 5 Minuten).",
           "short_status": "Nur die Farbe als Statustext anzeigen (z.B. \"Grün\") statt der ausführlichen Beschreibung."
         }
+      },
+      "limited": {
+        "title": "Eingeschränkte Unterstützung für {zip_code}",
+        "description": "StromGedacht liefert für diese Postleitzahl nur den Netzstatus und dessen Vorschau. Die Prognosewerte (Erneuerbare Energie, Netzlast, Residuallast, Supergrün-Schwelle und Beste Verbrauchszeit) gibt es nur im Netzgebiet der TransnetBW, daher werden diese Sensoren nicht angelegt.\n\nSie werden automatisch ergänzt, sobald StromGedacht die Prognose für diese Postleitzahl bereitstellt."
       }
     },
     "error": {
       "cannot_connect": "Verbindung zur API fehlgeschlagen. Bitte Internetverbindung prüfen.",
       "invalid_zip_code": "Bitte gib eine gültige 5-stellige Postleitzahl ein.",
-      "no_data_for_zip_code": "StromGedacht liefert für diese Postleitzahl keine Daten. Unterstützt werden nur Postleitzahlen im Netzgebiet der TransnetBW (überwiegend Baden-Württemberg).",
+      "no_data_for_zip_code": "StromGedacht liefert für diese Postleitzahl keine Daten.",
       "unknown": "Ein unbekannter Fehler ist aufgetreten."
     },
     "abort": {

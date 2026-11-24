@@ -10,7 +10,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import UnitOfPower
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -48,20 +48,38 @@ async def async_setup_entry(
 
     async_add_entities([
         StromGedachtStateSensor(coordinator, entry),
-        StromGedachtForecastSensor(coordinator, entry, "renewableEnergy", "renewable_energy"),
-        StromGedachtForecastSensor(coordinator, entry, "load", "grid_load"),
-        StromGedachtForecastSensor(coordinator, entry, "residualLoad", "residual_load"),
-        StromGedachtForecastSensor(
-            coordinator, entry, "superGreenThreshold", "super_green_threshold"
-        ),
         StromGedachtNextPeriodSensor(
             coordinator, entry, "next_super_green", {"super_green"}
         ),
         StromGedachtNextPeriodSensor(
             coordinator, entry, "next_reduce_consumption", {"orange", "red"}
         ),
-        StromGedachtBestTimeSensor(coordinator, entry),
     ])
+
+    # The forecast is only available for parts of the grid states area, so
+    # its sensors are added once the API provides it for the zip code
+    forecast_added = False
+
+    @callback
+    def _async_add_forecast_entities() -> None:
+        nonlocal forecast_added
+        if forecast_added or not coordinator.forecast_available:
+            return
+        forecast_added = True
+        async_add_entities([
+            StromGedachtForecastSensor(
+                coordinator, entry, "renewableEnergy", "renewable_energy"
+            ),
+            StromGedachtForecastSensor(coordinator, entry, "load", "grid_load"),
+            StromGedachtForecastSensor(coordinator, entry, "residualLoad", "residual_load"),
+            StromGedachtForecastSensor(
+                coordinator, entry, "superGreenThreshold", "super_green_threshold"
+            ),
+            StromGedachtBestTimeSensor(coordinator, entry),
+        ])
+
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_forecast_entities))
+    _async_add_forecast_entities()
 
 
 def _parse_datetime(value: Any) -> datetime | None:
@@ -109,6 +127,17 @@ class StromGedachtEntity(CoordinatorEntity[StromGedachtDataUpdateCoordinator]):
         )
 
 
+class StromGedachtForecastEntity(StromGedachtEntity):
+    """Base entity for sensors based on the region forecast."""
+
+    @property
+    def available(self) -> bool:
+        return super().available and self.coordinator.forecast_available
+
+    def _forecast_series(self, json_key: str) -> list[dict[str, Any]]:
+        return (self.coordinator.data.get("forecast") or {}).get(json_key, [])
+
+
 class StromGedachtStateSensor(StromGedachtEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.ENUM
     _attr_options = list(STATE_SLUG_MAPPING.values())
@@ -149,7 +178,7 @@ class StromGedachtStateSensor(StromGedachtEntity, SensorEntity):
         }
 
 
-class StromGedachtForecastSensor(StromGedachtEntity, SensorEntity):
+class StromGedachtForecastSensor(StromGedachtForecastEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.POWER
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = UnitOfPower.MEGA_WATT
@@ -170,7 +199,7 @@ class StromGedachtForecastSensor(StromGedachtEntity, SensorEntity):
 
     @property
     def _forecast(self) -> list[dict[str, Any]]:
-        return self.coordinator.data.get("forecast", {}).get(self._json_key, [])
+        return self._forecast_series(self._json_key)
 
     @property
     def native_value(self) -> float | None:
@@ -244,7 +273,7 @@ class StromGedachtNextPeriodSensor(StromGedachtEntity, SensorEntity):
         }
 
 
-class StromGedachtBestTimeSensor(StromGedachtEntity, SensorEntity):
+class StromGedachtBestTimeSensor(StromGedachtForecastEntity, SensorEntity):
     """Start of the forecast slot with the lowest residual load from now on.
 
     A low residual load means a high share of renewable energy, so this is
@@ -264,7 +293,7 @@ class StromGedachtBestTimeSensor(StromGedachtEntity, SensorEntity):
     def _best_slot(self) -> tuple[datetime, float, datetime] | None:
         # Include the slot that is currently running
         start_limit = dt_util.now() - FORECAST_SLOT
-        forecast = self.coordinator.data.get("forecast", {}).get("residualLoad", [])
+        forecast = self._forecast_series("residualLoad")
         best: tuple[datetime, float] | None = None
         last: datetime | None = None
 

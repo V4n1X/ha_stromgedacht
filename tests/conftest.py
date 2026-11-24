@@ -47,6 +47,8 @@ FORECAST_RESPONSE = {
     "superGreenThreshold": _series(1800, 1850, 1900, 1950),
 }
 
+NO_FORECAST = '"No data is available for the specified zip code (70173)."'
+
 
 @pytest.fixture(autouse=True)
 def auto_enable_custom_integrations(enable_custom_integrations: None) -> None:
@@ -58,6 +60,14 @@ def mock_api(aioclient_mock: AiohttpClientMocker) -> AiohttpClientMocker:
     """Mock a healthy StromGedacht API."""
     aioclient_mock.get(URL_STATES, json=STATES_RESPONSE)
     aioclient_mock.get(URL_FORECAST, json=FORECAST_RESPONSE)
+    return aioclient_mock
+
+
+@pytest.fixture
+def mock_api_limited(aioclient_mock: AiohttpClientMocker) -> AiohttpClientMocker:
+    """Mock the API for a zip code with grid states but without forecast."""
+    aioclient_mock.get(URL_STATES, json=STATES_RESPONSE)
+    aioclient_mock.get(URL_FORECAST, status=404, text=NO_FORECAST)
     return aioclient_mock
 
 

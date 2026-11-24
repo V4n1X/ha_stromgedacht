@@ -27,6 +27,7 @@ from .const import (
     DEFAULT_SHORT_STATUS,
     MIN_SCAN_INTERVAL,
     REQUEST_TIMEOUT,
+    URL_FORECAST,
     URL_STATES,
 )
 
@@ -43,21 +44,42 @@ class InvalidZipCode(Exception):
     """Error to indicate the API has no data for the zip code."""
 
 
-async def validate_input(hass: HomeAssistant, zip_code: str) -> None:
-    session = async_get_clientsession(hass)
+async def _check_states(session: aiohttp.ClientSession, zip_code: str) -> None:
     params = {"zip": zip_code, "hoursInFuture": 1}
+    async with session.get(URL_STATES, params=params) as response:
+        # The API answers unknown or invalid zip codes with 400
+        if response.status == 400:
+            raise InvalidZipCode
+        if response.status != 200:
+            raise CannotConnect
+        await response.json()
+
+
+async def _check_forecast(session: aiohttp.ClientSession, zip_code: str) -> bool:
+    async with session.get(URL_FORECAST, params={"zip": zip_code}) as response:
+        # The forecast only covers the TransnetBW grid area
+        if response.status == 404:
+            return False
+        if response.status != 200:
+            raise CannotConnect
+        await response.json()
+        return True
+
+
+async def validate_input(hass: HomeAssistant, zip_code: str) -> bool:
+    """Validate the zip code and return whether the forecast is available."""
+    session = async_get_clientsession(hass)
 
     try:
         async with asyncio.timeout(REQUEST_TIMEOUT):
-            async with session.get(URL_STATES, params=params) as response:
-                # The API answers unknown or invalid zip codes with 400
-                if response.status == 400:
-                    raise InvalidZipCode
-                if response.status != 200:
-                    raise CannotConnect
-                await response.json()
+            _, forecast_available = await asyncio.gather(
+                _check_states(session, zip_code),
+                _check_forecast(session, zip_code),
+            )
     except (aiohttp.ClientError, TimeoutError, ValueError) as err:
         raise CannotConnect from err
+
+    return forecast_available
 
 
 def _settings_schema(scan_interval: int, short_status: bool) -> dict:
@@ -101,10 +123,31 @@ class OptionsFlowHandler(OptionsFlowWithReload):
 class StromGedachtConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
+    def __init__(self) -> None:
+        self._data: dict[str, Any] = {}
+
     @staticmethod
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
         return OptionsFlowHandler()
+
+    def _create_entry(self) -> ConfigFlowResult:
+        return self.async_create_entry(
+            title=f"StromGedacht ({self._data[CONF_ZIP_CODE]})",
+            data=self._data,
+        )
+
+    async def async_step_limited(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Inform that only the grid states are available for the zip code."""
+        if user_input is not None:
+            return self._create_entry()
+
+        return self.async_show_form(
+            step_id="limited",
+            description_placeholders={CONF_ZIP_CODE: self._data[CONF_ZIP_CODE]},
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -121,7 +164,7 @@ class StromGedachtConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
                 try:
-                    await validate_input(self.hass, zip_code)
+                    forecast_available = await validate_input(self.hass, zip_code)
                 except InvalidZipCode:
                     errors[CONF_ZIP_CODE] = "no_data_for_zip_code"
                 except CannotConnect:
@@ -130,10 +173,10 @@ class StromGedachtConfigFlow(ConfigFlow, domain=DOMAIN):
                     _LOGGER.exception("Unexpected exception")
                     errors["base"] = "unknown"
                 else:
-                    return self.async_create_entry(
-                        title=f"StromGedacht ({zip_code})",
-                        data={**user_input, CONF_ZIP_CODE: zip_code},
-                    )
+                    self._data = {**user_input, CONF_ZIP_CODE: zip_code}
+                    if not forecast_available:
+                        return await self.async_step_limited()
+                    return self._create_entry()
 
         schema = vol.Schema({
             vol.Required(CONF_ZIP_CODE): str,
