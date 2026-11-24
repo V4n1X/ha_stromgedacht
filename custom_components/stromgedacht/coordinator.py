@@ -54,8 +54,23 @@ class StromGedachtDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=timedelta(minutes=scan_interval_min),
         )
 
-    async def _fetch(self, session: aiohttp.ClientSession, url: str, params: dict) -> Any:
+    @property
+    def forecast_available(self) -> bool:
+        """Return whether the API provides the region forecast for the zip code."""
+        return self.data is not None and self.data.get("forecast") is not None
+
+    async def _fetch(
+        self,
+        session: aiohttp.ClientSession,
+        url: str,
+        params: dict,
+        optional: bool = False,
+    ) -> Any:
         async with session.get(url, params=params) as response:
+            # The forecast only covers the TransnetBW grid area, other zip
+            # codes with grid states are answered with 404
+            if optional and response.status == 404:
+                return None
             if response.status != 200:
                 raise UpdateFailed(f"API error {response.status} from {url}")
             return await response.json()
@@ -70,7 +85,7 @@ class StromGedachtDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             async with asyncio.timeout(REQUEST_TIMEOUT):
                 data_states, data_forecast = await asyncio.gather(
                     self._fetch(session, URL_STATES, params_states),
-                    self._fetch(session, URL_FORECAST, params_forecast),
+                    self._fetch(session, URL_FORECAST, params_forecast, optional=True),
                 )
         except UpdateFailed:
             raise

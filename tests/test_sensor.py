@@ -18,7 +18,7 @@ from custom_components.stromgedacht.sensor import (
     StromGedachtStateSensor,
 )
 
-from .conftest import FORECAST_RESPONSE, STATES_RESPONSE
+from .conftest import FORECAST_RESPONSE, NO_FORECAST, NOW, STATES_RESPONSE
 
 STATUS = "sensor.stromgedacht_70173_status"
 
@@ -155,6 +155,116 @@ async def test_unknown_state_and_api_outage(
     aioclient_mock.clear_requests()
     aioclient_mock.get(URL_STATES, status=500)
     aioclient_mock.get(URL_FORECAST, json=FORECAST_RESPONSE)
+    freezer.tick(timedelta(minutes=16))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(STATUS).state == STATE_UNAVAILABLE
+
+
+FORECAST_ENTITIES = (
+    "sensor.stromgedacht_70173_grid_load",
+    "sensor.stromgedacht_70173_renewable_energy",
+    "sensor.stromgedacht_70173_residual_load",
+    "sensor.stromgedacht_70173_super_green_threshold",
+    "sensor.stromgedacht_70173_best_consumption_time",
+)
+
+
+async def _setup_limited(
+    hass: HomeAssistant, config_entry: MockConfigEntry, freezer
+) -> None:
+    freezer.move_to(NOW)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_limited_zip_code_without_forecast_entities(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_api_limited: AiohttpClientMocker,
+    freezer,
+) -> None:
+    """Without forecast only the sensors based on the grid states are created."""
+    await _setup_limited(hass, config_entry, freezer)
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    entity_registry = er.async_get(hass)
+    unique_ids = {
+        entity.unique_id
+        for entity in er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
+    }
+    entry_id = config_entry.entry_id
+    assert unique_ids == {
+        f"{entry_id}_state",
+        f"{entry_id}_next_super_green",
+        f"{entry_id}_next_reduce_consumption",
+    }
+    assert hass.states.get(STATUS).state == "super_green"
+    assert (
+        hass.states.get("sensor.stromgedacht_70173_next_super_green").state
+        == "2026-10-12T12:00:00+00:00"
+    )
+
+
+async def test_forecast_entities_added_when_forecast_appears(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_api_limited: AiohttpClientMocker,
+    freezer,
+) -> None:
+    await _setup_limited(hass, config_entry, freezer)
+    for entity_id in FORECAST_ENTITIES:
+        assert hass.states.get(entity_id) is None
+
+    mock_api_limited.clear_requests()
+    mock_api_limited.get(URL_STATES, json=STATES_RESPONSE)
+    mock_api_limited.get(URL_FORECAST, json=FORECAST_RESPONSE)
+    freezer.tick(timedelta(minutes=16))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # 12:23 now, so the 12:15 value is the current one
+    assert hass.states.get("sensor.stromgedacht_70173_residual_load").state == "4300.0"
+    for entity_id in FORECAST_ENTITIES:
+        assert hass.states.get(entity_id).state != STATE_UNAVAILABLE, entity_id
+
+    # Further updates must not add the entities again
+    freezer.tick(timedelta(minutes=16))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert len(er.async_entries_for_config_entry(er.async_get(hass), config_entry.entry_id)) == 8
+
+
+async def test_forecast_entities_unavailable_when_forecast_disappears(
+    hass: HomeAssistant,
+    setup_integration: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    freezer,
+) -> None:
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(URL_STATES, json=STATES_RESPONSE)
+    aioclient_mock.get(URL_FORECAST, status=404, text=NO_FORECAST)
+    freezer.tick(timedelta(minutes=16))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(STATUS).state == "super_green"
+    for entity_id in FORECAST_ENTITIES:
+        assert hass.states.get(entity_id).state == STATE_UNAVAILABLE, entity_id
+
+
+async def test_forecast_server_error_fails_update(
+    hass: HomeAssistant,
+    setup_integration: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    freezer,
+) -> None:
+    """Only a 404 means no forecast, other errors are API outages."""
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(URL_STATES, json=STATES_RESPONSE)
+    aioclient_mock.get(URL_FORECAST, status=500)
     freezer.tick(timedelta(minutes=16))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)

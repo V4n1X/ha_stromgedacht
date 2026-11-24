@@ -71,11 +71,15 @@ Requires Home Assistant **2025.8** or newer.
 
 | Option | Description | Default |
 | :--- | :--- | :--- |
-| **Zip Code** | German zip code (5 digits) within the TransnetBW grid area | – |
+| **Zip Code** | German zip code (5 digits) | – |
 | **Update Interval** | How often the data is fetched, in minutes (minimum 5) | `15` |
 | **Short status text** | Show only the color (e.g. "Green") instead of the full description | off |
 
 The update interval and the short status text can be changed later via **Configure** on the integration. To monitor several zip codes, add the integration once per zip code.
+
+### Partially supported zip codes
+
+StromGedacht provides the grid status for more zip codes than the forecast, which is only available in the TransnetBW grid area. For such zip codes the setup shows a short note, and only the status sensors are created: **Status**, **Next Super Green** and **Next Reduce Consumption**, including the device triggers. The forecast sensors and **Best Consumption Time** are added automatically as soon as StromGedacht provides the forecast for the zip code.
 
 ## 📊 Entities
 
@@ -272,7 +276,10 @@ actions:
 ## ❓ Troubleshooting
 
 **"StromGedacht provides no data for this zip code"**
-StromGedacht only covers the grid area of TransnetBW, which is mostly Baden-Württemberg.
+StromGedacht does not cover this zip code. The full data including the forecast is only available in the grid area of TransnetBW, which is mostly Baden-Württemberg; some other zip codes get the grid status only (see [Partially supported zip codes](#partially-supported-zip-codes)).
+
+**Forecast sensors and Best Consumption Time are missing**
+StromGedacht provides no forecast for your zip code (see [Partially supported zip codes](#partially-supported-zip-codes)).
 
 **The examples don't work with my entities**
 Check the entity IDs on the device page of the integration, they depend on the language of your Home Assistant (see [Entities](#-entities)).

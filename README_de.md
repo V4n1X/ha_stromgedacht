@@ -71,11 +71,15 @@ Voraussetzung ist Home Assistant **2025.8** oder neuer.
 
 | Option | Beschreibung | Standard |
 | :--- | :--- | :--- |
-| **Postleitzahl** | Deutsche Postleitzahl (5-stellig) im Netzgebiet der TransnetBW | – |
+| **Postleitzahl** | Deutsche Postleitzahl (5-stellig) | – |
 | **Abrufintervall** | Wie oft die Daten abgerufen werden, in Minuten (mindestens 5) | `15` |
 | **Kurzer Statustext** | Nur die Farbe anzeigen (z.B. „Grün“) statt der ausführlichen Beschreibung | aus |
 
 Abrufintervall und Statustext lassen sich später über **Konfigurieren** an der Integration ändern. Für mehrere Postleitzahlen fügst du die Integration einfach mehrmals hinzu.
+
+### Teilweise unterstützte Postleitzahlen
+
+StromGedacht liefert den Netzstatus für mehr Postleitzahlen als die Prognose, die es nur im Netzgebiet der TransnetBW gibt. Für solche Postleitzahlen zeigt die Einrichtung einen kurzen Hinweis, und es werden nur die Status-Sensoren angelegt: **Status**, **Nächstes Supergrün** und **Nächste Verbrauchsreduzierung**, inklusive der Geräte-Auslöser. Die Prognose-Sensoren und **Beste Verbrauchszeit** werden automatisch ergänzt, sobald StromGedacht die Prognose für die Postleitzahl bereitstellt.
 
 ## 📊 Entitäten
 
@@ -272,7 +276,10 @@ actions:
 ## ❓ Fehlerbehebung
 
 **„StromGedacht liefert für diese Postleitzahl keine Daten“**
-StromGedacht deckt nur das Netzgebiet der TransnetBW ab, also überwiegend Baden-Württemberg.
+StromGedacht deckt diese Postleitzahl nicht ab. Alle Daten inklusive Prognose gibt es nur im Netzgebiet der TransnetBW, also überwiegend in Baden-Württemberg; einige andere Postleitzahlen erhalten nur den Netzstatus (siehe [Teilweise unterstützte Postleitzahlen](#teilweise-unterstützte-postleitzahlen)).
+
+**Prognose-Sensoren und Beste Verbrauchszeit fehlen**
+StromGedacht liefert für deine Postleitzahl keine Prognose (siehe [Teilweise unterstützte Postleitzahlen](#teilweise-unterstützte-postleitzahlen)).
 
 **Die Beispiele funktionieren mit meinen Entitäten nicht**
 Prüfe die Entitäts-IDs auf der Geräteseite der Integration, sie hängen von der Sprache deines Home Assistant ab (siehe [Entitäten](#-entitäten)).
